@@ -1,0 +1,164 @@
+#!/bin/bash
+# usage: reduce-file input.rs 
+# produces: input.rs.perses input.rs.creduce input.rs.rustreduce input.rs.rustandcreduce
+# 
+
+# needs: a comment // build: <rust-version>
+# needs: a comment // error: <error-to-grep for>
+# takes: a comment // target: <target> 
+INPUT="$1"
+RUST_VERSION=""
+ERROR=""
+TARGET=""
+RUSTUP="${HOME}/.cargo/bin/rustup"
+EXTRA=""
+STARTDIR=$PWD
+
+# Paths to various scripts
+CREDUCE=${CREDUCE:-$HOME/perses-experiment/bins/creduce/creduce/creduce}
+RREDUCE=${RREDUCE:-$HOME/perses-experiment/bins/rust-reduce/target/debug/rust-reduce}
+PREDUCE=${PREDUCE:-$HOME/perses/bazel-bin/src/org/perses/perses_deploy.jar}
+
+WORKDIR=$(mktemp -d -t perses-experiment-XXXXXX)
+cd ${WORKDIR}
+cp ${STARTDIR}/${INPUT} .
+INPUT=`basename "${INPUT}"`
+
+while IFS= read -r line
+do
+  MATCH=`expr match "$line" "^//[ ]*build:[ ]*\(.*\)"`
+  if [ "$?" -eq 0 ]; then
+    RUST_VERSION=$MATCH
+    continue 
+  fi
+
+  MATCH=`expr match "$line" "^//[ ]*target:[ ]*\(.*\)"`
+  if [ "$?" -eq 0 ]; then
+    TARGET=$MATCH
+    continue
+  fi
+
+  MATCH=`expr match "$line" "^//[ ]*error:[ ]*\(.*\)"`
+  if [ "$?" -eq 0 ]; then
+    ERROR=$MATCH
+    continue
+  fi
+  
+  MATCH=`expr match "$line" "^//[ ]*extra:[ ]*\(.*\)"`
+  if [ "$?" -eq 0 ]; then
+    EXTRA=$MATCH
+    continue
+  fi
+
+  break
+done < "$INPUT"
+
+# Install the toolchain
+echo "Using Rust ${RUST_VERSION}; optional target: ${TARGET}"
+${RUSTUP} toolchain install --force ${RUST_VERSION}
+
+CMDLINE="${RUSTUP} run ${RUST_VERSION} rustc"
+if [ -n "${TARGET}" ]; then
+  ${RUSTUP} target add --toolchain ${RUST_VERSION} ${TARGET}
+  CMDLINE="${CMDLINE} --target=${TARGET}"
+fi
+CMDLINE="${CMDLINE} ${EXTRA}"
+
+
+# Generate the test script.
+cat >reduce-helper.sh <<EOF
+#!/bin/bash
+
+INPUT=\${1:-${INPUT}}
+
+if ! ( rustup run stable rustfmt --emit stdout \${INPUT} > /dev/null ); then
+  exit 1
+fi
+
+
+RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
+if [ "\$?" -eq 0 ]; then
+  exit 1
+fi
+
+if (echo \$RESULT | grep "${ERROR}"); then
+  exit 0
+fi
+
+exit 1
+EOF
+cat >creduce-helper.sh <<EOF
+#!/bin/bash
+
+INPUT=\${1:-rust-reduce-${INPUT}}
+
+if ! ( rustup run stable rustfmt --emit stdout \${INPUT} > /dev/null ); then
+  exit 1
+fi
+
+
+RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
+if [ "\$?" -eq 0 ]; then
+  exit 1
+fi
+
+if (echo \$RESULT | grep "${ERROR}"); then
+  exit 0
+fi
+
+exit 1
+EOF
+chmod +x reduce-helper.sh
+chmod +x creduce-helper.sh
+
+# Run Perses, Rust-Reduce, Rust+CReduce on target
+# TODO: save timings
+START=$SECONDS
+java -jar ${PREDUCE} --test-script reduce-helper.sh --input-file ${INPUT} --output-file ${INPUT}.perses
+TPERSES=$((SECONDS - START))
+START=$SECONDS
+${RREDUCE} -o rust-reduce-${INPUT} ./reduce-helper.sh ${INPUT}
+if ! [ -f rust-reduce-${INPUT} ]; then
+  cp ${INPUT} rust-reduce-${INPUT} ## No change, copy
+fi
+TRREDUCE=$((SECONDS - START))
+# Save Rust-Reduce's output before we feed it into CReduce
+rustup run stable rustfmt --quiet --emit stdout rust-reduce-${INPUT} > rreduce-reduced-${INPUT}
+${CREDUCE} ./creduce-helper.sh rust-reduce-${INPUT} 
+TCRREDUCE=$((SECONDS - START))
+# Run CReduce on the original file to get timing
+START=$SECONDS
+${CREDUCE} ./reduce-helper.sh ${INPUT}
+TCREDUCE=$((SECONDS - START))
+
+# Format the files to get consistent reduction comparisons
+rustup run stable rustfmt --quiet --emit stdout ${INPUT}.perses > perses-reduced-${INPUT}
+
+rustup run stable rustfmt --quiet --emit stdout rust-reduce-${INPUT} > crreduce-reduced-${INPUT}
+if [ "$?" -ne 0 ]; then
+  cp rust-reduce-${INPUT} crreduce-reduced-${INPUT}
+  FAIL=" (bad format)"
+fi
+
+rustup run stable rustfmt --quiet --emit stdout ${INPUT} > creduce-reduced-${INPUT}
+if [ "$?" -ne 0 ]; then
+  cp ${INPUT} creduce-reduced-${INPUT}
+  FAIL2=" (bad format)"
+fi
+
+# Compute sizes
+SPERSES=$(wc -w perses-reduced-${INPUT} | awk '{print $1}')
+SRREDUCE=$(wc -w rreduce-reduced-${INPUT} | awk '{print $1}')
+SCRREDUCE=$(wc -w crreduce-reduced-${INPUT} | awk '{print $1}')
+SCREDUCE=$(wc -w creduce-reduced-${INPUT} | awk '{print $1}')
+SORIG=$(wc -w ${INPUT}.orig | awk '{print $1}')
+
+PPERSES=$(echo "$SPERSES*100/$SORIG" | bc -l | xargs printf "%.2f")
+PRREDUCE=$(echo "$SRREDUCE*100/$SORIG" | bc -l | xargs printf "%.2f")
+PCRREDUCE=$(echo "$SCRREDUCE*100/$SORIG" | bc -l | xargs printf "%.2f")
+PCREDUCE=$(echo "$SCREDUCE*100/$SORIG" | bc -l | xargs printf "%.2f")
+
+# Report times + %-reduction
+echo ""
+echo "Reduction took Perses=${TPERSES}s, Rust-Reduce=${TRREDUCE}s, C-Reduce=${TCREDUCE}s, C-Reduce + Rust-Reduce=${TCRREDUCE}s"
+echo "Reduced sizes: Perses=${PPERSES}%, Rust-Reduce=${PRREDUCE}%, C-Reduce=${PCREDUCE}%$FAIL2 C-Reduce + Rust-Reduce=${PCRREDUCE}%$FAIL (of ${SORIG} words)"
