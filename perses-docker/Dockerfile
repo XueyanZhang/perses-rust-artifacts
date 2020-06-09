@@ -21,7 +21,8 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 RUN cd src && git clone https://github.com/jethrogb/rust-reduce && cd rust-reduce && /root/.cargo/bin/rustup run stable cargo build && cp target/debug/rust-reduce /opt
 
 # Build Perses
-RUN cd src && git clone https://github.com/chengniansun/perses && cd perses && bazel build //src/org/perses:perses_deploy.jar && cp bazel-bin/src/org/perses/perses_deploy.jar /opt
+RUN cd src && git clone https://github.com/chengniansun/perses && cd perses && bazel build //src/org/perses:perses_deploy.jar && \
+  bazel build //src/org/perses:token_counter_deploy.jar && cp bazel-bin/src/org/perses/*_deploy.jar /opt
 
 FROM ubuntu:18.04
 
