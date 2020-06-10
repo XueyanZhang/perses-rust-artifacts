@@ -31,19 +31,19 @@ USER root
 # Copy opt files
 COPY --from=builder /opt /opt
 
-# Add dataset and scripts
-COPY dataset /opt/dataset
-COPY scripts /opt/scripts
-
 # Install dependencies
 RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata
 RUN apt-get install -y libclang-cpp9 libexporter-lite-perl libgetopt-tabular-perl libregexp-common-perl libterm-readkey-perl libfile-which-perl openjdk-11-jre curl bc build-essential vim clang-format
+
+# Add dataset and scripts
+COPY dataset /opt/dataset
+COPY scripts /opt/scripts
 
 # Make new user, install rustup for it.
 RUN useradd -ms /bin/bash perses && usermod -aG sudo perses
 USER perses
 WORKDIR /home/perses
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/opt/scripts/:/home/perses/.cargo/bin:${PATH}" PREDUCE="/opt/perses_deploy.jar" CREDUCE="/opt/creduce/bin/creduce" RREDUCE="/opt/rust-reduce" #PERL5LIB=/opt/creduce/share/creduce/perl
+ENV PATH="/opt/scripts/:/home/perses/.cargo/bin:${PATH}" PREDUCE="/opt/perses_deploy.jar" CREDUCE="/opt/creduce/bin/creduce" RREDUCE="/opt/rust-reduce" COUNT="/opt/token_counter_deploy.jar" #PERL5LIB=/opt/creduce/share/creduce/perl
 
