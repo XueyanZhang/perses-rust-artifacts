@@ -2,6 +2,11 @@ FROM ubuntu:18.04 AS builder
 
 USER root
 
+# Set up the right tags for building
+ENV CREDUCE_TAG="e51dac9014312b3a3048498916e646a36cf39ce6"
+ENV RUST_REDUCE_TAG="3c54ffdf4629f6bd3adeef8aabda412acbdc2fd6"
+ENV PERSES_TAG="97a1bf4d9739650c58398ee2029d07f3002c7461"
+
 # Get base packages for development
 RUN apt-get update && apt-get install -y curl gnupg
 RUN curl https://bazel.build/bazel-release.pub.gpg | apt-key add - 
@@ -14,14 +19,14 @@ RUN apt-get install -y llvm-9-dev build-essential ninja-build clang-9 libclang-9
 RUN mkdir /src/
 
 # Build CReduce
-RUN cd /src && git clone https://github.com/csmith-project/creduce && cd creduce && LLVM_DIR=/usr/lib/llvm-9 cmake -GNinja -DCMAKE_EXE_LINKER_FLAGS="-Wl,--copy-dt-needed-entries" -DCMAKE_INSTALL_PREFIX=/opt/creduce && ninja install
+RUN cd /src && git clone https://github.com/csmith-project/creduce && cd creduce && git checkout $CREDUCE_TAG && LLVM_DIR=/usr/lib/llvm-9 cmake -GNinja -DCMAKE_EXE_LINKER_FLAGS="-Wl,--copy-dt-needed-entries" -DCMAKE_INSTALL_PREFIX=/opt/creduce && ninja install
 
 # Build Rust-Reduce
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-RUN cd src && git clone https://github.com/jethrogb/rust-reduce && cd rust-reduce && /root/.cargo/bin/rustup run stable cargo build && cp target/debug/rust-reduce /opt
+RUN cd src && git clone https://github.com/jethrogb/rust-reduce && cd rust-reduce && git checkout $RUST_REDUCE_TAG && /root/.cargo/bin/rustup run stable cargo build && cp target/debug/rust-reduce /opt
 
 # Build Perses
-RUN cd src && git clone https://github.com/chengniansun/perses && cd perses && bazel build //src/org/perses:perses_deploy.jar && \
+RUN cd src && git clone https://github.com/chengniansun/perses && cd perses && git checkout $PERSES_TAG && bazel build //src/org/perses:perses_deploy.jar && \
   bazel build //src/org/perses:token_counter_deploy.jar && cp bazel-bin/src/org/perses/*_deploy.jar /opt
 
 FROM ubuntu:18.04
@@ -34,7 +39,7 @@ COPY --from=builder /opt /opt
 # Install dependencies
 RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata
-RUN apt-get install -y libclang-cpp9 libexporter-lite-perl libgetopt-tabular-perl libregexp-common-perl libterm-readkey-perl libfile-which-perl openjdk-11-jre curl bc build-essential vim clang-format
+RUN apt-get install -y libclang-cpp9 libexporter-lite-perl libgetopt-tabular-perl libregexp-common-perl libterm-readkey-perl libfile-which-perl openjdk-11-jre curl bc build-essential vim clang-format asciinema
 
 # Add dataset and scripts
 COPY dataset /opt/dataset
@@ -45,5 +50,4 @@ RUN useradd -ms /bin/bash perses && usermod -aG sudo perses
 USER perses
 WORKDIR /home/perses
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/opt/scripts/:/home/perses/.cargo/bin:${PATH}" PREDUCE="/opt/perses_deploy.jar" CREDUCE="/opt/creduce/bin/creduce" RREDUCE="/opt/rust-reduce" COUNT="/opt/token_counter_deploy.jar" #PERL5LIB=/opt/creduce/share/creduce/perl
-
+ENV PATH="/opt/scripts/:/home/perses/.cargo/bin:${PATH}" PREDUCE="/opt/perses_deploy.jar" CREDUCE="/opt/creduce/bin/creduce" RREDUCE="/opt/rust-reduce" COUNT="/opt/token_counter_deploy.jar"
