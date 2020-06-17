@@ -7,6 +7,7 @@
 # needs: a comment // error: <error-to-grep for>
 # takes: a comment // target: <target> 
 INPUT="$1"
+EXTRA_PERSES_FLAGS="$2"
 RUST_VERSION=""
 ERROR=""
 TARGET=""
@@ -126,7 +127,7 @@ chmod +x creduce-helper.sh
 # TODO: save timings
 START=$SECONDS
 clear_countdir 
-java -jar ${PREDUCE} --test-script reduce-helper.sh --input-file ${INPUT} --output-file ${INPUT}.perses
+java -jar ${PREDUCE} --test-script reduce-helper.sh --input-file ${INPUT} --output-file ${INPUT}.perses ${EXTRA_PERSES_FLAGS}
 CPERSES=$(ls ${COUNTDIR} | wc -l)
 TPERSES=$((SECONDS - START))
 clear_countdir
