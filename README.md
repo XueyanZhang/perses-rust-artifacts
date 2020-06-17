@@ -51,6 +51,11 @@ We have shipped a script, `/opt/scripts/reduce-file` for reproducing the experim
 in our paper.  Given a Rust source file in `/opt/dataset/<issue>.rs`, you can run `reduce-file` against
 the file in `/opt/dataset` to reproduce the numbers for that issue number that we presented in our paper.
 
+We have also shipped a script, `/opt/scripts/reduce-all`, for running the reduction experiments on all files
+in the dataset.  This script places a trace of the output of running the reducers in `/output`; we recommend
+that you bind-mount `/output` to a directory outside of Docker.  The script `./launch.sh <directory>`
+will do this for you. 
+
 This script also accepts an optional second argument, which is a string that is used for extra arguments
 for running Perses.
 

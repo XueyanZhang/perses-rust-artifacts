@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd /opt/dataset
+for f in *.rs; do reduce-file $f 1>/output/$f.normal.result 2>&1; done
+for f in *.rs; do reduce-file $f "--enable-tree-slicer true" 1>/output/$f.tree.result 2>&1; done 
+for f in *.rs; do reduce-file $f "--enable-token-slicer true"1>/output/$f.token.result  2>&1; done 
+for f in *.rs; do reduce-file $f "--enable-tree-slicer true --enable-token-slicer true" 1>/output/$f.both.result 2>&1; done

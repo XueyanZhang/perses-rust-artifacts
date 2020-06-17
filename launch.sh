@@ -8,4 +8,4 @@ DIRECTORY=$(realpath $1)
 mkdir -p ${DIRECTORY}
 chmod 777 ${DIRECTORY}
 
-docker run --rm --name "fse-2020-perses-artifacts" -it -v ${DIRECTORY}:/outside fse-2020-perses-artifacts
+docker run --rm --name "fse-2020-perses-artifacts" -it -v ${DIRECTORY}:/output fse-2020-perses-artifacts
