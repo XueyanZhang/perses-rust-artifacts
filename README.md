@@ -4,7 +4,7 @@ tool paper submission, "Perses for Rust: A Demonstration".
 
 # Build Instructions
 Run `./build.sh` from the repository.  This should create a Docker image tagged with the
-name `perses` after the script completes.
+name `fse-2020-artifacts` after the script completes.
 
 # Running Perses/C-Reduce/Rust-Reduce
 The binaries for Perses, C-Reduce, Rust-Reduce are installed into `/opt` inside the container.
