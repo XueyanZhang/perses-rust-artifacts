@@ -13,7 +13,6 @@ ERROR=""
 TARGET=""
 RUSTUP="${HOME}/.cargo/bin/rustup"
 EXTRA=""
-STARTDIR=$PWD
 
 # Paths to various scripts
 CREDUCE=${CREDUCE:-$HOME/perses-experiment/bins/creduce/creduce/creduce}
@@ -29,9 +28,9 @@ clear_countdir() {
   mkdir -p ${COUNTDIR}
 }
 
+cp ${INPUT} ${WORKDIR}
+cp ${INPUT} ${WORKDIR}/orig-$(basename "${INPUT}")
 cd ${WORKDIR}
-cp ${STARTDIR}/${INPUT} .
-cp ${STARTDIR}/${INPUT} ./orig-$(basename "${INPUT}")
 INPUT=`basename "${INPUT}"`
 
 while IFS= read -r line
