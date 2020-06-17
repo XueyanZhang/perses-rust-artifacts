@@ -51,6 +51,9 @@ We have shipped a script, `/opt/scripts/reduce-file` for reproducing the experim
 in our paper.  Given a Rust source file in `/opt/dataset/<issue>.rs`, you can run `reduce-file` against
 the file in `/opt/dataset` to reproduce the numbers for that issue number that we presented in our paper.
 
+This script also accepts an optional second argument, which is a string that is used for extra arguments
+for running Perses.
+
 The last three lines that this script produces on standard output correspond to the time taken that
 each reducer used to generate the final reduced file, the number of oracle invocations used
 to generate the final reduced file, and the final size of the reduced file for each reducer.

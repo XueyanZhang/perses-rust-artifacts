@@ -1,2 +1,2 @@
 #!/bin/sh
-docker build -t fse-2020-artifacts perses-docker
+docker build -t fse-2020-perses-artifacts perses-docker
