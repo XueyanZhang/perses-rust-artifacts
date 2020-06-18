@@ -52,6 +52,8 @@ to reduce `hello.rs`.  The reduced file will be placed in the same folder.
 
 ![Reduction Demo Screencast](demos/reduction-demo.svg)
 
+(if this animation is too small, click [here](https://raw.githubusercontent.com/e45lee/FSE2020-artifacts/master/demos/reduction-demo.svg).)
+
 # Reproducing the experiments.
 We have shipped a script, `/opt/scripts/reduce-file` for reproducing the experiments we presented
 in our paper.  Given a Rust source file in `/opt/dataset/<issue>.rs`, you can run `reduce-file` against
