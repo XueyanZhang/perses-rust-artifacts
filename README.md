@@ -46,10 +46,19 @@ fi
 exit 1
 ```
 
+As a demonstration, we have placed in `/home/perses/reduction-demo/` a program to be reduced and an example
+oracle for it.  From that directory, run `java -jar /opt/perses_deploy.jar --input-file hello.rs --test-script reduce.sh`
+to reduce `hello.rs`.  The reduced file will be placed in the same folder.
+
+![Reduction Demo Screencast](demos/reduction-demo.svg)
+
 # Reproducing the experiments.
 We have shipped a script, `/opt/scripts/reduce-file` for reproducing the experiments we presented
 in our paper.  Given a Rust source file in `/opt/dataset/<issue>.rs`, you can run `reduce-file` against
-the file in `/opt/dataset` to reproduce the numbers for that issue number that we presented in our paper.
+the files in `/opt/dataset` to reproduce the numbers for that issue number that we presented in our paper.
+`reduce-file` also accepts an optional second argument which is passed along as extra arguments to Perses;
+e.g `reduce-file /opt/dataset/63154.rs "--enable-token-slicer true"` will run the reduction experiment with
+"--enable-token-slicer true" passed along to the Perses invocation.
 
 We have also shipped a script, `/opt/scripts/reduce-all`, for running the reduction experiments on all files
 in the dataset.  This script places a trace of the output of running the reducers in `/output`; we recommend

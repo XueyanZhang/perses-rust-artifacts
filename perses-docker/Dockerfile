@@ -38,8 +38,15 @@ COPY --from=builder /opt /opt
 
 # Install dependencies
 RUN apt-get update
-RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata
+RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata locales
 RUN apt-get install -y libclang-cpp9 libexporter-lite-perl libgetopt-tabular-perl libregexp-common-perl libterm-readkey-perl libfile-which-perl openjdk-11-jre curl bc build-essential vim clang-format asciinema
+
+# Set up locale
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+
+ENV LANG en_US.UTF-8 
 
 # Add dataset and scripts
 COPY dataset /opt/dataset
@@ -47,7 +54,11 @@ COPY scripts /opt/scripts
 
 # Make new user, install rustup for it.
 RUN useradd -ms /bin/bash perses && usermod -aG sudo perses
+COPY reduction-demo /home/perses/reduction-demo
+RUN chown perses:perses /home/perses/reduction-demo
+
 USER perses
 WORKDIR /home/perses
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/opt/scripts/:/home/perses/.cargo/bin:${PATH}" PREDUCE="/opt/perses_deploy.jar" CREDUCE="/opt/creduce/bin/creduce" RREDUCE="/opt/rust-reduce" COUNT="/opt/token_counter_deploy.jar"
+ENV PATH="/opt/scripts/:/home/perses/.cargo/bin:${PATH}" PREDUCE="/opt/perses_deploy.jar" CREDUCE="/opt/creduce/bin/creduce" RREDUCE="/opt/rust-reduce" COUNT="/opt/token_counter_deploy.jar" LOCALE=
+
