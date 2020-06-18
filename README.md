@@ -47,7 +47,9 @@ exit 1
 ```
 
 As a demonstration, we have placed in `/home/perses/reduction-demo/` a program to be reduced and an example
-oracle for it.  From that directory, run `java -jar /opt/perses_deploy.jar --input-file hello.rs --test-script reduce.sh`
+oracle for it.  The oracle in question checks to see if the program exits correctly and prints `hello_world` to standard output.
+
+To run this demonstration, from `/home/perses/reduction-demo`, run `java -jar /opt/perses_deploy.jar --input-file hello.rs --test-script reduce.sh`
 to reduce `hello.rs`.  The reduced file will be placed in the same folder.
 
 ![Reduction Demo Screencast](demos/reduction-demo.svg)
@@ -60,19 +62,16 @@ in our paper.  Given a Rust source file in `/opt/dataset/<issue>.rs`, you can ru
 the files in `/opt/dataset` to reproduce the numbers for that issue number that we presented in our paper.
 `reduce-file` also accepts an optional second argument which is passed along as extra arguments to Perses;
 e.g `reduce-file /opt/dataset/63154.rs "--enable-token-slicer true"` will run the reduction experiment with
-"--enable-token-slicer true" passed along to the Perses invocation.
+`--enable-token-slicer true` passed along to the Perses invocation.
+
+The last three lines that this script produces on standard output correspond to the time taken that
+each reducer used to generate the final reduced file, the number of oracle invocations used
+to generate the final reduced file, and the final size of the reduced file for each reducer.
 
 We have also shipped a script, `/opt/scripts/reduce-all`, for running the reduction experiments on all files
 in the dataset.  This script places a trace of the output of running the reducers in `/output`; we recommend
 that you bind-mount `/output` to a directory outside of Docker.  The script `./launch.sh <directory>`
 will do this for you. 
-
-This script also accepts an optional second argument, which is a string that is used for extra arguments
-for running Perses.
-
-The last three lines that this script produces on standard output correspond to the time taken that
-each reducer used to generate the final reduced file, the number of oracle invocations used
-to generate the final reduced file, and the final size of the reduced file for each reducer.
 
 To run more experiments, you can re-use the machinery in `reduce-file` with your own Rust source files.
 You only need to add the following header to the top of your source file:
