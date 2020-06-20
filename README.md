@@ -64,7 +64,7 @@ the files in `/opt/dataset` to reproduce the numbers for that issue number that 
 e.g `reduce-file /opt/dataset/63154.rs "--enable-token-slicer true"` will run the reduction experiment with
 `--enable-token-slicer true` passed along to the Perses invocation.
 
-The last three lines that this script produces on standard output correspond to the time taken that
+The last five lines that this script produces on standard output correspond to the time taken that
 each reducer used to generate the final reduced file, the number of oracle invocations used
 to generate the final reduced file, and the final size of the reduced file for each reducer.
 
