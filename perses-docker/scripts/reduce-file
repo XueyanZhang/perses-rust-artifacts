@@ -81,7 +81,7 @@ cat >reduce-helper.sh <<EOF
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-${INPUT}}
 
-if ! ( rustup run stable rustfmt --emit stdout \${INPUT} > /dev/null ); then
+if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
   exit 1
 fi
 
@@ -103,7 +103,7 @@ cat >creduce-helper.sh <<EOF
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-rust-reduce-${INPUT}}
 
-if ! ( rustup run stable rustfmt --emit stdout \${INPUT} > /dev/null ); then
+if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
   exit 1
 fi
 
