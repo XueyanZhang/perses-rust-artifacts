@@ -1,26 +1,18 @@
-// aux-build:two_macros.rs
-
-macro_rules! define_vec {
-    () => {
-        extern crate std as Vec;
-    }
+macro_rules ! define_vec {
+( ) => {
+extern crate std as Vec ;
 }
-
-define_vec!();
-
+}
+define_vec ! ( ) ;
 mod m {
-    fn check() {
-        Vec::panic!(); //~ ERROR `Vec` is ambiguous
-    }
+fn check ( ) {
+core :: panic ! ( ) ;
 }
-
-macro_rules! define_other_core {
-    () => {
-        extern crate std as core;
-        //~^ ERROR macro-expanded `extern crate` items cannot shadow names passed with `--extern`
-    }
 }
-
-define_other_core!();
-
-fn main() {}
+macro_rules ! define_other_core {
+( ) => {
+extern crate std as core ;
+}
+}
+define_other_core ! ( ) ;
+fn main ( ) { }

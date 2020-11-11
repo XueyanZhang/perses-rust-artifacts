@@ -1,37 +1,28 @@
-struct S;
-
+struct S ;
 trait Tr {
-    type A;
+type A ;
 }
-
 impl Tr for S {
-    type A = S;
+type A = S ;
 }
-
-fn f<T: Tr>() {
-    let s = T::A {};
-    //~^ ERROR expected struct, variant or union type, found associated type
-    let z = T::A::<u8> {};
-    //~^ ERROR expected struct, variant or union type, found associated type
-    //~| ERROR type arguments are not allowed for this type
-    match S {
-        T::A {} => {}
-        //~^ ERROR expected struct, variant or union type, found associated type
-    }
+fn f < T : Tr > ( ) {
+let s = T :: A { } ;
+let z = T :: A :: < u8 > { } ;
+match S {
+T :: A { } => { }
 }
-
-fn g<T: Tr<A = S>>() {
-    let s = T::A {}; // OK
-    let z = T::A::<u8> {}; //~ ERROR type arguments are not allowed for this type
-    match S {
-        T::A {} => {} // OK
-    }
 }
-
-fn main() {
-    let s = S::A {}; //~ ERROR ambiguous associated type
-    let z = S::A::<u8> {}; //~ ERROR ambiguous associated type
-    match S {
-        S::A {} => {} //~ ERROR ambiguous associated type
-    }
+fn g < T : Tr < A = S > > ( ) {
+let s = T :: A { } ;
+let z = T :: A :: < u8 > { } ;
+match S {
+T :: A { } => { }
+}
+}
+fn main ( ) {
+let s = S :: A { } ;
+let z = S :: A :: < f > { } ;
+match S {
+S :: A { } => { }
+}
 }
