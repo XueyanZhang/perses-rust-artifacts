@@ -28,99 +28,127 @@ clear_countdir() {
   mkdir -p ${COUNTDIR}
 }
 
+# Copy the script into the working directory.
 cp ${INPUT} ${WORKDIR}
-cp ${INPUT} ${WORKDIR}/orig-$(basename "${INPUT}")
+FILENAME=`basename "${INPUT}"`
+BASE="${INPUT%.*}"
+cp ${INPUT} ${WORKDIR}/orig-${FILENAME}
 cd ${WORKDIR}
 INPUT=`basename "${INPUT}"`
 
-while IFS= read -r line
-do
-  MATCH=`expr match "$line" "^//[ ]*build:[ ]*\(.*\)"`
-  if [ "$?" -eq 0 ]; then
-    RUST_VERSION=$MATCH
-    continue 
-  fi
+# Test if $BASE.sh, $BASE.setup.sh exist; if they do, run $BASE.setup.sh and use $BASE.sh as the reduction script
+if [ -f ${BASE}.sh ] && [ - ${BASE}.setup.sh ]; then 
+  ${BASE}.setup.sh
+ 
+  # Generate the test script.
+  cat >reduce-helper.sh <<EOF
+  #!/bin/bash
 
-  MATCH=`expr match "$line" "^//[ ]*target:[ ]*\(.*\)"`
-  if [ "$?" -eq 0 ]; then
-    TARGET=$MATCH
-    continue
-  fi
+  touch ${COUNTDIR}/\$\$.\$(date +%s)
+  INPUT=\${1:-${INPUT}}
 
-  MATCH=`expr match "$line" "^//[ ]*error:[ ]*\(.*\)"`
-  if [ "$?" -eq 0 ]; then
-    ERROR=$MATCH
-    continue
-  fi
+EOF
+  cat >>reduce-helper.sh ${BASE}.sh
+
   
-  MATCH=`expr match "$line" "^//[ ]*extra:[ ]*\(.*\)"`
-  if [ "$?" -eq 0 ]; then
-    EXTRA=$MATCH
-    continue
+  cat >creduce-helper.sh <<EOF
+  #!/bin/bash
+
+  touch ${COUNTDIR}/\$\$.\$(date +%s)
+  INPUT=\${1:-rust-reduce-${INPUT}}
+EOF
+  cat >>creduce-helper.sh ${BASE}.sh
+   
+else
+  while IFS= read -r line
+  do
+    MATCH=`expr match "$line" "^//[ ]*build:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      RUST_VERSION=$MATCH
+      continue 
+    fi
+
+    MATCH=`expr match "$line" "^//[ ]*target:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      TARGET=$MATCH
+      continue
+    fi
+
+    MATCH=`expr match "$line" "^//[ ]*error:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      ERROR=$MATCH
+      continue
+    fi
+    
+    MATCH=`expr match "$line" "^//[ ]*extra:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      EXTRA=$MATCH
+      continue
+    fi
+
+    break
+  done < "$INPUT"
+
+  # Install the toolchain
+  echo "Using Rust ${RUST_VERSION}; optional target: ${TARGET}"
+  ${RUSTUP} toolchain install --force ${RUST_VERSION}
+
+  CMDLINE="${RUSTUP} run ${RUST_VERSION} rustc"
+  if [ -n "${TARGET}" ]; then
+    ${RUSTUP} target add --toolchain ${RUST_VERSION} ${TARGET}
+    CMDLINE="${CMDLINE} --target=${TARGET}"
+  fi
+  CMDLINE="${CMDLINE} ${EXTRA}"
+
+
+  # Generate the test script.
+  cat >reduce-helper.sh <<EOF
+  #!/bin/bash
+
+  touch ${COUNTDIR}/\$\$.\$(date +%s)
+  INPUT=\${1:-${INPUT}}
+
+  if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
+    exit 1
   fi
 
-  break
-done < "$INPUT"
 
-# Install the toolchain
-echo "Using Rust ${RUST_VERSION}; optional target: ${TARGET}"
-${RUSTUP} toolchain install --force ${RUST_VERSION}
+  RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
+  if [ "\$?" -eq 0 ]; then
+    exit 1
+  fi
 
-CMDLINE="${RUSTUP} run ${RUST_VERSION} rustc"
-if [ -n "${TARGET}" ]; then
-  ${RUSTUP} target add --toolchain ${RUST_VERSION} ${TARGET}
-  CMDLINE="${CMDLINE} --target=${TARGET}"
-fi
-CMDLINE="${CMDLINE} ${EXTRA}"
+  if (echo \$RESULT | grep "${ERROR}"); then
+    exit 0
+  fi
 
-
-# Generate the test script.
-cat >reduce-helper.sh <<EOF
-#!/bin/bash
-
-touch ${COUNTDIR}/\$\$.\$(date +%s)
-INPUT=\${1:-${INPUT}}
-
-if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
   exit 1
-fi
-
-
-RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
-if [ "\$?" -eq 0 ]; then
-  exit 1
-fi
-
-if (echo \$RESULT | grep "${ERROR}"); then
-  exit 0
-fi
-
-exit 1
 EOF
-cat >creduce-helper.sh <<EOF
-#!/bin/bash
+  cat >creduce-helper.sh <<EOF
+  #!/bin/bash
 
-touch ${COUNTDIR}/\$\$.\$(date +%s)
-INPUT=\${1:-rust-reduce-${INPUT}}
+  touch ${COUNTDIR}/\$\$.\$(date +%s)
+  INPUT=\${1:-rust-reduce-${INPUT}}
 
-if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
+  if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
+    exit 1
+  fi
+
+
+  RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
+  if [ "\$?" -eq 0 ]; then
+    exit 1
+  fi
+
+  if (echo \$RESULT | grep "${ERROR}"); then
+    exit 0
+  fi
+
   exit 1
-fi
-
-
-RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
-if [ "\$?" -eq 0 ]; then
-  exit 1
-fi
-
-if (echo \$RESULT | grep "${ERROR}"); then
-  exit 0
-fi
-
-exit 1
 EOF
-chmod +x reduce-helper.sh
-chmod +x creduce-helper.sh
+  chmod +x reduce-helper.sh
+  chmod +x creduce-helper.sh
+fi
 
 # Run Perses, Rust-Reduce, Rust+CReduce on target
 # TODO: save timings
