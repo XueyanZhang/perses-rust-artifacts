@@ -8,17 +8,13 @@
 # takes: a comment // target: <target> 
 INPUT="$1"
 EXTRA_PERSES_FLAGS="$2"
-RUST_VERSION=""
-ERROR=""
-TARGET=""
 RUSTUP="${HOME}/.cargo/bin/rustup"
-EXTRA=""
 
 # Paths to various scripts
-CREDUCE=${CREDUCE:-$HOME/perses-experiment/bins/creduce/creduce/creduce}
-RREDUCE=${RREDUCE:-$HOME/perses-experiment/bins/rust-reduce/target/debug/rust-reduce}
-PREDUCE=${PREDUCE:-$HOME/perses/bazel-bin/src/org/perses/perses_deploy.jar}
-COUNT=${COUNT:-$HOME/perses/bazel-bin/src/org/perses/token_counter_deploy.jar}
+CREDUCE=${CREDUCE:-$HOME/Development/perses-experiment/bins/creduce/creduce/creduce}
+RREDUCE=${RREDUCE:-$HOME/Development/perses-experiment/bins/rust-reduce/target/debug/rust-reduce}
+PREDUCE=${PREDUCE:-$HOME/Development/perses/bazel-bin/src/org/perses/perses_deploy.jar}
+COUNT=${COUNT:-$HOME/Development/perses/bazel-bin/src/org/perses/token_counter_deploy.jar}
 
 WORKDIR=$(mktemp -d -t perses-experiment-XXXXXX)
 COUNTDIR=${WORKDIR}/countdir
@@ -33,33 +29,44 @@ cp ${INPUT} ${WORKDIR}
 FILENAME=`basename "${INPUT}"`
 BASE="${INPUT%.*}"
 cp ${INPUT} ${WORKDIR}/orig-${FILENAME}
-cd ${WORKDIR}
 INPUT=`basename "${INPUT}"`
 
+echo ${BASE}.sh
+[ -f ${BASE}.sh ] && echo " found"
+echo ${BASE}.setup.sh
+[ -f ${BASE}.setup.sh ] && echo " found"
+
+
 # Test if $BASE.sh, $BASE.setup.sh exist; if they do, run $BASE.setup.sh and use $BASE.sh as the reduction script
-if [ -f ${BASE}.sh ] && [ - ${BASE}.setup.sh ]; then 
+if [ -f ${BASE}.sh ] && [ -f ${BASE}.setup.sh ]; then 
   ${BASE}.setup.sh
  
   # Generate the test script.
-  cat >reduce-helper.sh <<EOF
-  #!/bin/bash
+  cat >${WORKDIR}/reduce-helper.sh <<EOF
+#!/bin/bash
 
-  touch ${COUNTDIR}/\$\$.\$(date +%s)
-  INPUT=\${1:-${INPUT}}
+touch ${COUNTDIR}/\$\$.\$(date +%s)
+INPUT=\${1:-${INPUT}}
 
 EOF
-  cat >>reduce-helper.sh ${BASE}.sh
+  cat >>${WORKDIR}/reduce-helper.sh ${BASE}.sh
 
   
-  cat >creduce-helper.sh <<EOF
-  #!/bin/bash
+  cat >${WORKDIR}/creduce-helper.sh <<EOF
+#!/bin/bash
 
-  touch ${COUNTDIR}/\$\$.\$(date +%s)
-  INPUT=\${1:-rust-reduce-${INPUT}}
+touch ${COUNTDIR}/\$\$.\$(date +%s)
+INPUT=\${1:-rust-reduce-${INPUT}}
 EOF
-  cat >>creduce-helper.sh ${BASE}.sh
-   
+  cat >>${WORKDIR}/creduce-helper.sh ${BASE}.sh
+  cd ${WORKDIR}
 else
+  cd ${WORKDIR}
+  RUST_VERSION=""
+  ERROR=""
+  TARGET=""
+  EXTRA=""
+
   while IFS= read -r line
   do
     MATCH=`expr match "$line" "^//[ ]*build:[ ]*\(.*\)"`
@@ -103,53 +110,53 @@ else
 
   # Generate the test script.
   cat >reduce-helper.sh <<EOF
-  #!/bin/bash
+#!/bin/bash
 
-  touch ${COUNTDIR}/\$\$.\$(date +%s)
-  INPUT=\${1:-${INPUT}}
+touch ${COUNTDIR}/\$\$.\$(date +%s)
+INPUT=\${1:-${INPUT}}
 
-  if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
-    exit 1
-  fi
-
-
-  RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
-  if [ "\$?" -eq 0 ]; then
-    exit 1
-  fi
-
-  if (echo \$RESULT | grep "${ERROR}"); then
-    exit 0
-  fi
-
+if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
   exit 1
-EOF
-  cat >creduce-helper.sh <<EOF
-  #!/bin/bash
-
-  touch ${COUNTDIR}/\$\$.\$(date +%s)
-  INPUT=\${1:-rust-reduce-${INPUT}}
-
-  if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
-    exit 1
-  fi
-
-
-  RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
-  if [ "\$?" -eq 0 ]; then
-    exit 1
-  fi
-
-  if (echo \$RESULT | grep "${ERROR}"); then
-    exit 0
-  fi
-
-  exit 1
-EOF
-  chmod +x reduce-helper.sh
-  chmod +x creduce-helper.sh
 fi
 
+
+RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
+if [ "\$?" -eq 0 ]; then
+  exit 1
+fi
+
+if (echo \$RESULT | grep "${ERROR}"); then
+  exit 0
+fi
+
+exit 1
+EOF
+  cat >creduce-helper.sh <<EOF
+#!/bin/bash
+
+touch ${COUNTDIR}/\$\$.\$(date +%s)
+INPUT=\${1:-rust-reduce-${INPUT}}
+
+if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
+  exit 1
+fi
+
+
+RESULT=\`${CMDLINE} \${INPUT} 2>&1\`
+if [ "\$?" -eq 0 ]; then
+  exit 1
+fi
+
+if (echo \$RESULT | grep "${ERROR}"); then
+  exit 0
+fi
+
+exit 1
+EOF
+fi
+# Mark scripts +x
+chmod +x reduce-helper.sh
+chmod +x creduce-helper.sh
 # Run Perses, Rust-Reduce, Rust+CReduce on target
 # TODO: save timings
 START=$SECONDS
