@@ -1,10 +1,10 @@
-# FSE2020-artifacts
-This repository contains the build instructions and data for our FSE 2020 
+# ICSE2021-artifacts
+This repository contains the build instructions and data for our ICSE 2021
 tool paper submission, "Perses for Rust: A Demonstration".
 
 # Build Instructions
 Run `./build.sh` from the repository.  This should create a Docker image tagged with the
-name `fse-2020-perses-artifacts` after the script completes.
+name `icse-2021-perses-artifacts` after the script completes.
 
 # Running Perses/C-Reduce/Rust-Reduce
 The binaries for Perses, C-Reduce, Rust-Reduce are installed into `/opt` inside the container.
