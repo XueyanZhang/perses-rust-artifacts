@@ -4,7 +4,7 @@ set -o pipefail
 
 readonly OUTPUT="temp_compilation_output.tmp.txt"
 
-if timeout -s 9 30 rustc --crate-type=staticlib -C debuginfo=2 -C opt-level=z -C target-cpu=skylake mutant.rs &> "${OUTPUT}" ; then 
+if timeout -s 9 30 rustup run nightly-2020-10-24 rustc --crate-type=staticlib -C debuginfo=2 -C opt-level=z -C target-cpu=skylake "${INPUT}" &> "${OUTPUT}" ; then 
   exit 1
 fi
 
