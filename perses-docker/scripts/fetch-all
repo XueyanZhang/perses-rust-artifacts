@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /opt/dataset
+for f in *.rs; do fetch-prereqs $f; done

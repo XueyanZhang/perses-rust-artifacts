@@ -61,4 +61,4 @@ USER perses
 WORKDIR /home/perses
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/opt/scripts/:/home/perses/.cargo/bin:${PATH}" PREDUCE="/opt/perses_deploy.jar" CREDUCE="/opt/creduce/bin/creduce" RREDUCE="/opt/rust-reduce" COUNT="/opt/token_counter_deploy.jar" LOCALE=
-
+RUN fetch-all

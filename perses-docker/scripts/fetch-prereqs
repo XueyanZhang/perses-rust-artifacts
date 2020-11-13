@@ -1,0 +1,90 @@
+#!/bin/bash
+# usage: reduce-file input.rs 
+# produces: input.rs.perses input.rs.creduce input.rs.rustreduce input.rs.rustandcreduce
+# 
+
+# needs: a comment // build: <rust-version>
+# needs: a comment // error: <error-to-grep for>
+# takes: a comment // target: <target> 
+INPUT="$1"
+EXTRA_PERSES_FLAGS="$2"
+RUSTUP="${HOME}/.cargo/bin/rustup"
+
+# Paths to various scripts
+CREDUCE=${CREDUCE:-$HOME/Development/perses-experiment/bins/creduce/creduce/creduce}
+RREDUCE=${RREDUCE:-$HOME/Development/perses-experiment/bins/rust-reduce/target/debug/rust-reduce}
+PREDUCE=${PREDUCE:-$HOME/Development/perses/bazel-bin/src/org/perses/perses_deploy.jar}
+COUNT=${COUNT:-$HOME/Development/perses/bazel-bin/src/org/perses/token_counter_deploy.jar}
+
+WORKDIR=$(mktemp -d -t perses-experiment-XXXXXX)
+COUNTDIR=${WORKDIR}/countdir
+
+clear_countdir() {
+  rm -rf ${COUNTDIR}
+  mkdir -p ${COUNTDIR}
+}
+
+# Copy the script into the working directory.
+cp ${INPUT} ${WORKDIR}
+FILENAME=`basename "${INPUT}"`
+BASE="${INPUT%.*}"
+cp ${INPUT} ${WORKDIR}/orig-${FILENAME}
+INPUT=`basename "${INPUT}"`
+
+echo ${BASE}.sh
+[ -f ${BASE}.sh ] && echo " found"
+echo ${BASE}.setup.sh
+[ -f ${BASE}.setup.sh ] && echo " found"
+
+
+# Test if $BASE.sh, $BASE.setup.sh exist; if they do, run $BASE.setup.sh and use $BASE.sh as the reduction script
+if [ -f ${BASE}.sh ] && [ -f ${BASE}.setup.sh ]; then 
+  ${BASE}.setup.sh
+ 
+else
+  cd ${WORKDIR}
+  RUST_VERSION=""
+  ERROR=""
+  TARGET=""
+  EXTRA=""
+
+  while IFS= read -r line
+  do
+    MATCH=`expr match "$line" "^//[ ]*build:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      RUST_VERSION=$MATCH
+      continue 
+    fi
+
+    MATCH=`expr match "$line" "^//[ ]*target:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      TARGET=$MATCH
+      continue
+    fi
+
+    MATCH=`expr match "$line" "^//[ ]*error:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      ERROR=$MATCH
+      continue
+    fi
+    
+    MATCH=`expr match "$line" "^//[ ]*extra:[ ]*\(.*\)"`
+    if [ "$?" -eq 0 ]; then
+      EXTRA=$MATCH
+      continue
+    fi
+
+    break
+  done < "$INPUT"
+
+  # Install the toolchain
+  echo "Using Rust ${RUST_VERSION}; optional target: ${TARGET}"
+  ${RUSTUP} toolchain install --force ${RUST_VERSION}
+
+  CMDLINE="${RUSTUP} run ${RUST_VERSION} rustc"
+  if [ -n "${TARGET}" ]; then
+    ${RUSTUP} target add --toolchain ${RUST_VERSION} ${TARGET}
+    CMDLINE="${CMDLINE} --target=${TARGET}"
+  fi
+  CMDLINE="${CMDLINE} ${EXTRA}"
+fi
