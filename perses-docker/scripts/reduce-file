@@ -177,7 +177,7 @@ fi
 # TODO: save timings
 START=$SECONDS
 clear_countdir 
-java -jar ${PREDUCE} --test-script reduce-helper.sh --input-file ${INPUT} --output-file ${INPUT}.perses ${EXTRA_PERSES_FLAGS} ${PERSES_FLAGS}
+java -jar ${PREDUCE} --code-format COMPACT_ORIG_FORMAT --test-script reduce-helper.sh --input-file ${INPUT} --output-file ${INPUT}.perses ${EXTRA_PERSES_FLAGS} ${PERSES_FLAGS}
 CPERSES=$(ls ${COUNTDIR} | wc -l)
 TPERSES=$((SECONDS - START))
 clear_countdir
