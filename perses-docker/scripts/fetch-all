@@ -1,4 +1,5 @@
 #!/bin/bash
 
 cd /opt/dataset
+rustup toolchain install --force nightly
 for f in *.rs; do fetch-prereqs $f; done

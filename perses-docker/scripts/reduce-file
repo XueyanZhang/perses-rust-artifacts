@@ -1,5 +1,5 @@
 #!/bin/bash
-# usage: reduce-file input.rs 
+# usage: reduce-file input.rs <opt-cores> <opt-extra-args>
 # produces: input.rs.perses input.rs.creduce input.rs.rustreduce input.rs.rustandcreduce
 # 
 
@@ -7,7 +7,8 @@
 # needs: a comment // error: <error-to-grep for>
 # takes: a comment // target: <target> 
 INPUT="$1"
-EXTRA_PERSES_FLAGS="$2"
+CORES="$2"
+EXTRA_PERSES_FLAGS="$3"
 RUSTUP="${HOME}/.cargo/bin/rustup"
 
 # Paths to various scripts
@@ -47,6 +48,9 @@ if [ -f ${BASE}.sh ] && [ -f ${BASE}.setup.sh ]; then
 
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-${INPUT}}
+if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
+  exit 1
+fi
 
 EOF
   cat >>${WORKDIR}/reduce-helper.sh ${BASE}.sh
@@ -57,6 +61,9 @@ EOF
 
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-rust-reduce-${INPUT}}
+if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
+  exit 1
+fi
 EOF
   cat >>${WORKDIR}/creduce-helper.sh ${BASE}.sh
   cd ${WORKDIR}
@@ -115,7 +122,7 @@ else
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-${INPUT}}
 
-if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
+if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
   exit 1
 fi
 
@@ -137,7 +144,7 @@ EOF
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-rust-reduce-${INPUT}}
 
-if ! ( rustup run stable rustc -Z parse-only ${INPUT} ); then
+if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
   exit 1
 fi
 
@@ -157,11 +164,20 @@ fi
 # Mark scripts +x
 chmod +x reduce-helper.sh
 chmod +x creduce-helper.sh
+
+PERSES_FLAGS=""
+CREDUCE_FLAGS=""
+
+if [ "${CORES}" != "" ]; then
+  PERSES_FLAGS="--threads ${CORES}"
+  CREDUCE_FLAGS="--n ${CORES}"
+fi
+
 # Run Perses, Rust-Reduce, Rust+CReduce on target
 # TODO: save timings
 START=$SECONDS
 clear_countdir 
-java -jar ${PREDUCE} --test-script reduce-helper.sh --input-file ${INPUT} --output-file ${INPUT}.perses ${EXTRA_PERSES_FLAGS}
+java -jar ${PREDUCE} --test-script reduce-helper.sh --input-file ${INPUT} --output-file ${INPUT}.perses ${EXTRA_PERSES_FLAGS} ${PERSES_FLAGS}
 CPERSES=$(ls ${COUNTDIR} | wc -l)
 TPERSES=$((SECONDS - START))
 clear_countdir
@@ -174,7 +190,7 @@ TRREDUCE=$((SECONDS - START))
 CRREDUCE=$(ls ${COUNTDIR} | wc -l)
 # Save Rust-Reduce's output before we feed it into CReduce
 rustup run stable rustfmt --quiet --emit stdout rust-reduce-${INPUT} > rreduce-reduced-${INPUT}
-${CREDUCE} ./creduce-helper.sh rust-reduce-${INPUT} 
+${CREDUCE} ${CREDUCE_FLAGS} ./creduce-helper.sh rust-reduce-${INPUT} 
 TCRREDUCE=$((SECONDS - START))
 CCRREDUCE=$(ls ${COUNTDIR} | wc -l)
 # Run CReduce on the original file to get timing
