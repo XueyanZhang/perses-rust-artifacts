@@ -39,7 +39,7 @@ echo ${BASE}.setup.sh
 
 # Test if $BASE.sh, $BASE.setup.sh exist; if they do, run $BASE.setup.sh and use $BASE.sh as the reduction script
 if [ -f ${BASE}.sh ] && [ -f ${BASE}.setup.sh ]; then 
-  ${BASE}.setup.sh
+  bash ${BASE}.setup.sh
  
   # Generate the test script.
   cat >${WORKDIR}/reduce-helper.sh <<EOF
