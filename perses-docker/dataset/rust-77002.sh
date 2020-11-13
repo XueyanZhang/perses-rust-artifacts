@@ -6,7 +6,6 @@ set -o pipefail
 readonly FILE="${INPUT}"
 
 readonly RUSTC_VERSION="nightly-2020-09-22"
-rustup toolchain install "${RUSTC_VERSION}"
 
 readonly EXE_WRONG="./wrong.out"
 if ! timeout -s 9 60 rustup run "${RUSTC_VERSION}" rustc -Z mir-opt-level=2 -o "${EXE_WRONG}" "${FILE}"; then

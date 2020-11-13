@@ -6,8 +6,6 @@ readonly FILE="${INPUT}"
 
 readonly BUGGY_RUSTC_VERSION="nightly-2020-02-10"
 readonly CORRECT_RUSTC_VERSION="nightly-2020-11-05"
-rustup toolchain install "${BUGGY_RUSTC_VERSION}" --force
-rustup toolchain install "${CORRECT_RUSTC_VERSION}" --force
 
 readonly EXE_WRONG="./wrong.out"
 if ! timeout -s 9 60 rustup run "${BUGGY_RUSTC_VERSION}" rustc -o "${EXE_WRONG}" "${FILE}"; then
