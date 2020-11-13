@@ -48,7 +48,7 @@ if [ -f ${BASE}.sh ] && [ -f ${BASE}.setup.sh ]; then
 
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-${INPUT}}
-if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
+if ! ( rustup run nightly rustc -Z parse-only \${INPUT} ); then
   exit 1
 fi
 
@@ -61,7 +61,7 @@ EOF
 
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-rust-reduce-${INPUT}}
-if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
+if ! ( rustup run nightly rustc -Z parse-only \${INPUT} ); then
   exit 1
 fi
 EOF
@@ -122,7 +122,7 @@ else
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-${INPUT}}
 
-if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
+if ! ( rustup run nightly rustc -Z parse-only \${INPUT} ); then
   exit 1
 fi
 
@@ -144,7 +144,7 @@ EOF
 touch ${COUNTDIR}/\$\$.\$(date +%s)
 INPUT=\${1:-rust-reduce-${INPUT}}
 
-if ! ( rustup run nightly rustc -Z parse-only ${INPUT} ); then
+if ! ( rustup run nightly rustc -Z parse-only \${INPUT} ); then
   exit 1
 fi
 
