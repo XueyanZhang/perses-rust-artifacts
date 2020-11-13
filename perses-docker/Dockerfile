@@ -3,9 +3,9 @@ FROM ubuntu:18.04 AS builder
 USER root
 
 # Set up the right tags for building
-ENV CREDUCE_TAG="e51dac9014312b3a3048498916e646a36cf39ce6"
+ENV CREDUCE_TAG="c32c5c327758a047ae10e55a2465ba54293dfff9"
 ENV RUST_REDUCE_TAG="3c54ffdf4629f6bd3adeef8aabda412acbdc2fd6"
-ENV PERSES_TAG="97a1bf4d9739650c58398ee2029d07f3002c7461"
+ENV PERSES_TAG="dbae2214e13816df8370448e85185c0645785409"
 
 # Get base packages for development
 RUN apt-get update && apt-get install -y curl gnupg
@@ -39,7 +39,7 @@ COPY --from=builder /opt /opt
 # Install dependencies
 RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata locales
-RUN apt-get install -y libclang-cpp9 libexporter-lite-perl libgetopt-tabular-perl libregexp-common-perl libterm-readkey-perl libfile-which-perl openjdk-11-jre curl bc build-essential vim clang-format asciinema
+RUN apt-get install -y libclang-cpp9 libexporter-lite-perl libgetopt-tabular-perl libregexp-common-perl libterm-readkey-perl libfile-which-perl openjdk-11-jre curl bc build-essential vim clang-format asciinema valgrind
 
 # Set up locale
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
