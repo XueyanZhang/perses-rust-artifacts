@@ -49,7 +49,7 @@ exit 1
 As a demonstration, we have placed in `/home/perses/reduction-demo/` a program to be reduced and an example
 oracle for it.  The oracle in question checks to see if the program exits correctly and prints `hello_world` to standard output.
 
-To run this demonstration, from `/home/perses/reduction-demo`, run `java -jar /opt/perses_deploy.jar --input-file hello.rs --test-script reduce.sh`
+To run this demonstration, from `/home/perses/reduction-demo`, run `java -jar /opt/perses_deploy.jar --input-file hello.rs --test-script reduce.sh --code-format COMPACT_ORIG_FORMAT`
 to reduce `hello.rs`.  The reduced file will be placed in the same folder.
 
 ![Reduction Demo Screencast](demos/reduction-demo.svg)
