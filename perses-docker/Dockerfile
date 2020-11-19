@@ -5,7 +5,7 @@ USER root
 # Set up the right tags for building
 ENV CREDUCE_TAG="c32c5c327758a047ae10e55a2465ba54293dfff9"
 ENV RUST_REDUCE_TAG="3c54ffdf4629f6bd3adeef8aabda412acbdc2fd6"
-ENV PERSES_TAG="dbae2214e13816df8370448e85185c0645785409"
+ENV PERSES_TAG="34d4dc4745aeb19f7828be9365b5eedcb8164329"
 
 # Get base packages for development
 RUN apt-get update && apt-get install -y curl gnupg

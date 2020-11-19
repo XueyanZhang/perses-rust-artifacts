@@ -4,11 +4,11 @@ set -o pipefail
 
 readonly OUTPUT="temp_compilation_output.tmp.txt"
 
-if timeout -s 9 30 rustup run nightly-2020-10-21 rustc --crate-type=staticlib -C debuginfo=2 -C opt-level=z -C target-cpu=skylake "${INPUT}" &> "${OUTPUT}" ; then 
+if timeout -s 9 30 rustup run nightly-2020-10-22 rustc --crate-type=staticlib -C debuginfo=2 -C opt-level=z -C target-cpu=skylake "${INPUT}" &> "${OUTPUT}" ; then 
   exit 1
 fi
 
-if ! grep --quiet --fixed-strings "error: internal compiler error: compiler/rustc_trait_selection/src/traits/object_safety.rs:454:33: error: the type \`[type error]\` has an unknown layout" "${OUTPUT}" ; then
+if ! grep --quiet --fixed-strings "error: internal compiler error: compiler/rustc_middle/src/ty/sty.rs:2150:18: tuple_fields called on non-tuple" "${OUTPUT}" ; then
   exit 1
 fi
 

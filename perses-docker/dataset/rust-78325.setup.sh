@@ -1,2 +1,2 @@
 #!/bin/bash
-rustup toolchain install nightly-2020-10-22
+rustup toolchain install --force nightly-2020-10-23
