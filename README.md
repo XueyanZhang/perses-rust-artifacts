@@ -59,10 +59,14 @@ to reduce `hello.rs`.  The reduced file will be placed in the same folder.
 # Reproducing the experiments.
 We have shipped a script, `/opt/scripts/reduce-file` for reproducing the experiments we presented
 in our paper.  Given a Rust source file in `/opt/dataset/<issue>.rs`, you can run `reduce-file` against
-the files in `/opt/dataset` to reproduce the numbers for that issue number that we presented in our paper.
-`reduce-file` also accepts an optional second argument which is passed along as extra arguments to Perses;
-e.g `reduce-file /opt/dataset/63154.rs "--enable-token-slicer true"` will run the reduction experiment with
-`--enable-token-slicer true` passed along to the Perses invocation.
+the files in `/opt/dataset` and a given number of cores to reproduce the numbers for that issue number that we presented in our paper.
+
+`reduce-file` also accepts an optional third argument which is passed along as extra arguments to Perses;
+e.g `reduce-file 6 /opt/dataset/63154.rs "--enable-token-slicer true"` will run the reduction experiment with
+`--enable-token-slicer true` passed along to the Perses invocation with 6 cores.
+
+The original reductions were run with no extra arguments passed to Perses, the extended reductions
+were run with `"--enable-token-slicer true"`
 
 The last five lines that this script produces on standard output correspond to the time taken that
 each reducer used to generate the final reduced file, the number of oracle invocations used
@@ -71,7 +75,8 @@ to generate the final reduced file, and the final size of the reduced file for e
 We have also shipped a script, `/opt/scripts/reduce-all`, for running the reduction experiments on all files
 in the dataset.  This script places a trace of the output of running the reducers in `/output`; we recommend
 that you bind-mount `/output` to a directory outside of Docker.  The script `./launch.sh <directory>`
-will do this for you. 
+will do this for you.   Again, `/opt/scripts/reduce-all` takes a mandatory number of threads of parallelism
+as its first argument; we ran the tests with 6 cores.
 
 To run more experiments, you can re-use the machinery in `reduce-file` with your own Rust source files.
 You only need to add the following header to the top of your source file:
