@@ -196,7 +196,7 @@ CCRREDUCE=$(ls ${COUNTDIR} | wc -l)
 # Run CReduce on the original file to get timing
 clear_countdir
 START=$SECONDS
-${CREDUCE} ./reduce-helper.sh ${INPUT}
+${CREDUCE} ${CREDUCE_FLAGS} ./reduce-helper.sh ${INPUT}
 TCREDUCE=$((SECONDS - START))
 CCREDUCE=$(ls ${COUNTDIR} | wc -l)
 
