@@ -13,7 +13,8 @@ RUN curl https://bazel.build/bazel-release.pub.gpg | apt-key add -
 RUN echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
 RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata
-RUN apt-get install -y llvm-9-dev build-essential ninja-build clang-9 libclang-9-dev openjdk-11-jdk git libexporter-lite-perl  libgetopt-tabular-perl libclang-9-dev clang-format-9 cmake flex bison bazel  libregexp-common-perl libterm-readkey-perl libfile-which-perl
+RUN apt-get install -y llvm-9-dev build-essential ninja-build clang-9 libclang-9-dev openjdk-11-jdk git libexporter-lite-perl  libgetopt-tabular-perl libclang-9-dev clang-format-9 cmake flex bison bazel-4.2.2 libregexp-common-perl libterm-readkey-perl libfile-which-perl
+RUN ln -s /usr/bin/bazel-4.2.2 /usr/bin/bazel
 
 # Build binary directory
 RUN mkdir /src/
